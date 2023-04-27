@@ -54,7 +54,7 @@ This log file access.log, don`t have an implemented parser for this moment
 
 ## ROADMAP todo
 
-- parse the events related with log.file (should be Modify)? **_in progress_**
+- parse the events related with log. file (should be modifying)? **_in progress_**
 - get paths and foreach all logs files and read content **_in progress_**
 - parse all lines (using patterns or regex) (format apache, nginx, IIS) also JSON? **_in progress_**
 - Use a database (like sqlite) to store last line check before close file (create struct)
