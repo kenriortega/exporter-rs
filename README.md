@@ -37,6 +37,21 @@ Add this line before to use this logger exporter.
         ....
 ```
 
+Result for our PoC
+
+```shell
+watching /var/log/nginx/
+
+file to read Some("access.metrics.log")
+number line: 0, content_log: ::1 - - [27/Apr/2023:05:51:22 -0700] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58" 0.000
+number line: 1, content_log: ::1 - - [27/Apr/2023:05:53:47 -0700] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58" 0.000
+number line: 2, content_log: ::1 - - [27/Apr/2023:06:01:46 -0700] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58" 0.000
+number line: 3, content_log: ::1 - - [27/Apr/2023:06:03:59 -0700] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58" 0.000
+file to read Some("access.log")
+This log file access.log, don`t have an implemented parser for this moment
+...
+```
+
 ## ROADMAP todo
 
 - parse the events related with log.file (should be Modify)? **_in progress_**
