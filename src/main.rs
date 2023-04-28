@@ -84,7 +84,7 @@ fn read_file_log(paths: Vec<PathBuf>) {
 
 fn parse_log_line(i: usize, line: String) -> Option<LogEntry>{
     println!("number line: {}, content_log: {}", i, line);
-    let re = Regex::new(r#"^([\w:.]+) - (\S+) \[(.*?)\] "(.*?)" (\d+) (\d+) "(.*?)" "(.*?)" (.*?)$"#).unwrap();
+    let re = Regex::new(r#"^([\w:.]+) - (\S+) \[(.*?)] "(.*?)" (\d+) (\d+) "(.*?)" "(.*?)" (.*?)$"#).unwrap();
     let captures = re.captures(line.as_str())?;
 
     Some(LogEntry {
