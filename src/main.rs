@@ -3,8 +3,10 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use regex::Regex;
+use serde::{Deserialize, Serialize};
+use serde_json::Result;
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 struct LogEntry {
     remote_addr: String,
     time_local: String,
@@ -64,7 +66,7 @@ fn read_file_log(paths: Vec<PathBuf>) {
                     for (i, line) in reader.lines().enumerate() {
                         // parse logfile to an struct
                        match parse_log_line(i, line.unwrap().to_owned()) {
-                           Some(entry) => println!("Line: {}, Entry: {:?}",i,entry),
+                           Some(entry) => println!("Line: {}, Entry: {:?}",i,parse_to_json(entry)),
                            None=> {}
                        } ;
                     }
@@ -95,4 +97,8 @@ fn parse_log_line(i: usize, line: String) -> Option<LogEntry>{
         http_user_agent: captures[8].to_owned(),
         request_time: captures[9].parse().unwrap(),
     })
+}
+
+fn parse_to_json(entry: LogEntry) -> String{
+    serde_json::to_string(&entry).unwrap()
 }
