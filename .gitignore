@@ -1,3 +1,3 @@
 /target
 access.metric.log
-_offset.txt
+_offset_*.txt

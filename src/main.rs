@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::Result;
 use std::collections::HashMap;
 use std::fmt::format;
-use std::fs;
-use std::fs::File;
-use std::io::{BufRead, BufReader, Read, Write};
+use std::{fs, io};
+use std::fs::{File, OpenOptions};
+use std::io::{BufRead, BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
 #[derive(Serialize, Deserialize)]
@@ -21,14 +21,11 @@ struct LogEntry {
     request_time: f32,
 }
 fn main() {
-    match offset_committer_check() {
-        Ok(offset) => println!("{}", offset),
-        Err(e) => println!("watch error: {:?}", e),
-    }
     let path = std::env::args()
         .nth(1)
         .expect("Argument 1 needs to be a path");
     println!("watching {}", path);
+
     if let Err(e) = watch(path) {
         println!("error: {:?}", e)
     }
@@ -58,29 +55,61 @@ fn watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
 fn event_parser(event: Event) {
     let paths = event.paths;
     // READ files from paths changed
-    read_file_log(paths).expect("TODO: panic message");
+    read_file_log(paths);
 }
 
-fn read_file_log(paths: Vec<PathBuf>) -> Result<()> {
+fn read_file_log(paths: Vec<PathBuf>)-> io::Result<()> {
+
     for path in paths.iter() {
         println!("file to read {:?}", path.file_name());
         match path.file_name() {
             Some(name) => {
                 if name == "access.metrics.log" {
+                    let output_file = OpenOptions::new()
+                        .read(true)
+                        .write(true)
+                        .create(true)
+                        .open(format!("_offset_{}.txt",name.to_str().unwrap()))?;
+                    let mut offset_reader = BufReader::new(&output_file);
+                    let mut offset_str = String::new();
+                    offset_reader.read_line(&mut offset_str)?;
+                    let mut offset = offset_str.trim().parse::<usize>().unwrap_or(0);
+                    let mut output_file = BufWriter::new(&output_file);
+
+                    println!("last offset from txt : {}",offset);
                     let file = File::open(path).unwrap();
                     let reader = BufReader::new(file);
-                    for (i, line) in reader.lines().enumerate() {
-                        // parse logfile to an struct
+                    if offset > 0 {
 
-                        match parse_log_line(line.unwrap().to_owned()) {
-                            Some(entry) => {
-                                insert_into_db(parse_to_json(entry).expect("error"));
-                                // commit offset
-                                offset_committer_file(i).expect("TODO: panic message");
-                            }
-                            None => {}
-                        };
+                        for line in reader.lines().skip(offset - 1) {
+
+                            match parse_log_line(line.unwrap().to_owned()) {
+                                Some(entry) => {
+                                    insert_into_db(parse_to_json(entry).expect("error"));
+                                    offset += 1;
+                                }
+                                None => {}
+                            };
+                        }
+                    } else {
+                        for line in reader.lines() {
+
+                            match parse_log_line(line.unwrap().to_owned()) {
+                                Some(entry) => {
+                                    insert_into_db(parse_to_json(entry).expect("error"));
+                                    offset += 1;
+                                }
+                                None => {}
+                            };
+                        }
                     }
+
+
+                    println!("last offset to commit {}",offset);
+                    output_file.flush()?;
+                    output_file.seek(SeekFrom::Start(0)).unwrap();
+                    output_file.write_fmt(format_args!("{}", offset)).unwrap();
+
                 } else {
                     println!(
                         "This log file {}, don`t have an implemented parser for this moment",
@@ -92,6 +121,7 @@ fn read_file_log(paths: Vec<PathBuf>) -> Result<()> {
         }
     }
     Ok(())
+
 }
 
 fn parse_log_line(line: String) -> Option<LogEntry> {
@@ -118,24 +148,4 @@ fn parse_to_json(entry: LogEntry) -> Option<String> {
 
 fn insert_into_db(json: String) {
     println!("{}", json)
-}
-
-fn offset_committer_file(line_number: usize) -> Result<()> {
-    let ln = format!("{}", line_number);
-    let mut file = File::create("_offset.txt").unwrap();
-
-    file.write(ln.as_ref()).unwrap();
-    Ok(())
-}
-
-fn offset_committer_check() -> Result<String> {
-    if let Ok(file) = File::open("_offset.txt") {
-        if let Some(Ok(line)) = BufReader::new(file).lines().next() {
-            return Ok(line);
-        }
-    } else {
-        File::create("_offset.txt").unwrap();
-        return Ok("".to_string());
-    }
-    Ok("".to_string())
 }
