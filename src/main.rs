@@ -55,7 +55,7 @@ fn watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
 fn event_parser(event: Event) {
     let paths = event.paths;
     // READ files from paths changed
-    read_file_log(paths);
+    read_file_log(paths).expect("TODO: panic message");
 }
 
 fn read_file_log(paths: Vec<PathBuf>)-> io::Result<()> {
