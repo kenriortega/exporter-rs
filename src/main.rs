@@ -65,16 +65,16 @@ fn read_file_log(paths: Vec<PathBuf>)-> io::Result<()> {
         match path.file_name() {
             Some(name) => {
                 if name == "access.metrics.log" {
-                    let output_file = OpenOptions::new()
+                    let offset_file = OpenOptions::new()
                         .read(true)
                         .write(true)
                         .create(true)
                         .open(format!("_offset_{}.txt",name.to_str().unwrap()))?;
-                    let mut offset_reader = BufReader::new(&output_file);
+                    let mut offset_reader = BufReader::new(&offset_file);
                     let mut offset_str = String::new();
                     offset_reader.read_line(&mut offset_str)?;
                     let mut offset = offset_str.trim().parse::<usize>().unwrap_or(0);
-                    let mut output_file = BufWriter::new(&output_file);
+                    let mut offset_file = BufWriter::new(&offset_file);
 
                     println!("last offset from txt : {}",offset);
                     let file = File::open(path).unwrap();
@@ -106,9 +106,9 @@ fn read_file_log(paths: Vec<PathBuf>)-> io::Result<()> {
 
 
                     println!("last offset to commit {}",offset);
-                    output_file.flush()?;
-                    output_file.seek(SeekFrom::Start(0)).unwrap();
-                    output_file.write_fmt(format_args!("{}", offset)).unwrap();
+                    offset_file.flush()?;
+                    offset_file.seek(SeekFrom::Start(0)).unwrap();
+                    offset_file.write_fmt(format_args!("{}", offset)).unwrap();
 
                 } else {
                     println!(
