@@ -1,7 +1,7 @@
 # Exporter rs
 
 
-## Metcis to sense for this PoC
+## Metrics to sense for this PoC
 
 **_Response time_**: The time it takes for the Nginx server to respond to a request. This can be useful for monitoring the speed of your website and detecting performance issues.
 
