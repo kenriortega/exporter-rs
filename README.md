@@ -3,11 +3,11 @@
 
 ## Metrics to sense for this PoC
 
-**_Response time_**: The time it takes for the Nginx server to respond to a request. This can be useful for monitoring the speed of your website and detecting performance issues.
+**_Response time_**: The time it takes for the nginx server to respond to a request. This can be useful for monitoring the speed of your website and detecting performance issues.
 
-**_Response code_**: The HTTP status code returned by Nginx in response to a request. This can help you monitor the amount of 4xx and 5xx errors your website may be experiencing.
+**_Response code_**: The HTTP status code returned by nginx in response to a request. This can help you monitor the amount of 4xx and 5xx errors your website may be experiencing.
 
-**_Response size_**: The size of the HTTP response sent by Nginx to the client. This can help you monitor bandwidth usage and detect possible network issues.
+**_Response size_**: The size of the HTTP response sent by nginx to the client. This can help you monitor bandwidth usage and detect possible network issues.
 
 **_Client IP_**: The IP address of the client that made the request. This can be useful for monitoring website activity and detecting possible attacks.
 
@@ -19,7 +19,7 @@
 
 ## Logs Types
 
-> Nginx logs files 
+> nginx logs files 
 
 Add this line before to use this logger exporter.
 ```nginx
