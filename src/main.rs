@@ -37,5 +37,5 @@ fn watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
 fn event_parser(event: Event) {
     let paths = event.paths;
     // READ files from paths changed
-    parsers::nginx::read_file_log(paths).expect("TODO: panic message");
+    parsers::nginx::read_file_log(paths).expect("error: read_file_log");
 }

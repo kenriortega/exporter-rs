@@ -60,4 +60,3 @@ This log file access.log, don`t have an implemented parser for this moment
 - Use a database (like sqlite) to store last line check before close file (create struct)
 - Send data to different sources (kafka, loki, postgresql, should be elastic)
 - Create configuration file
-- Create dockerfile for this app and convert to daemon set for k8s.
