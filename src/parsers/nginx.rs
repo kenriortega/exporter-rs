@@ -1,8 +1,5 @@
 use crate::parsers::log_entry::{LogEntry, LogTransformer};
 use crate::sources::datasource::{DatasourceFactory, SourceType};
-use crate::sources::notifier::Notifier;
-use crate::sources::observer::{Event, Subscriber};
-use crate::sources::{kafka, postgres};
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::{BufRead, BufReader, BufWriter, Seek, SeekFrom, Write};
@@ -76,40 +73,16 @@ fn send_to_datasource(entry: LogEntry) {
     sc.push(SourceType::Postgresql);
 
     let json_data = LogEntry::parse_to_json(entry.clone()).expect("error");
+
     // using Factory pattern
-    // for s in sc.iter() {
-    //     let datasource = DatasourceFactory::create_ds(&s);
-    //     // Datasource notifier
-    //    datasource.send_data(json_data.clone())
-    // }
-
-    // using observer pattern
-    let mut notifier = Notifier::default();
     for s in sc.iter() {
-        match s {
-            SourceType::Postgresql => {
-                notifier
-                    .events()
-                    .subscribe(Event::Emit, kafka::send_data);
-                notifier.emit(json_data.clone());
-                notifier
-                    .events()
-                    .unsubscribe(Event::Emit, kafka::send_data);
-                notifier.save();
-            }
-            SourceType::Kafka => {
-                notifier
-                    .events()
-                    .subscribe(Event::Emit, postgres::send_data);
-                notifier.emit(json_data.clone());
-                notifier
-                    .events()
-                    .unsubscribe(Event::Emit, postgres::send_data);
-                notifier.save();
-            }
-        };
-
-
+        let datasource = DatasourceFactory::create_ds(&s);
+        // Datasource notifier
+       datasource.send_data(json_data.clone())
     }
 
+    // using observer pattern
+    for s in sc.iter() {
+        DatasourceFactory::add_observer(s,json_data.clone());
+    }
 }
