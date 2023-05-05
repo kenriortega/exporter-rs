@@ -1,4 +1,4 @@
-use crate::sources::observer::{Event, Publisher};
+use crate::notifier::observer::{Event, Publisher};
 
 #[derive(Default)]
 pub struct Notifier {

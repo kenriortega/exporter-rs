@@ -1,21 +1,29 @@
+use crate::config::Cfg;
 use crate::parsers::log_entry::{LogEntry, LogTransformer};
 use crate::sources::datasource::{DatasourceFactory, SourceType};
+use chrono::prelude::*;
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::{BufRead, BufReader, BufWriter, Seek, SeekFrom, Write};
 use std::path::PathBuf;
 
-pub fn read_file_log(paths: Vec<PathBuf>) -> io::Result<()> {
+pub fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
     for path in paths.iter() {
         println!("file to read {:?}", path.file_name());
         match path.file_name() {
             Some(name) => {
                 if name == "access.metrics.log" {
+                    let local: DateTime<Local> = Local::now();
+                    let formatted_date = local.format("%Y-%m-%d").to_string();
                     let offset_file = OpenOptions::new()
                         .read(true)
                         .write(true)
                         .create(true)
-                        .open(format!("_offset_{}.txt", name.to_str().unwrap()))?;
+                        .open(format!(
+                            "_offset_{}_{}.txt",
+                            name.to_str().unwrap(),
+                            formatted_date
+                        ))?;
                     let mut offset_reader = BufReader::new(&offset_file);
                     let mut offset_str = String::new();
                     offset_reader.read_line(&mut offset_str)?;
@@ -31,7 +39,7 @@ pub fn read_file_log(paths: Vec<PathBuf>) -> io::Result<()> {
                         for line in reader.lines().skip(offset - 1) {
                             match LogEntry::parse_log_line(line?.to_owned()) {
                                 Some(entry) => {
-                                    send_to_datasource(entry);
+                                    send_to_datasource(entry,cfg.clone());
                                     offset += 1;
                                 }
                                 None => {}
@@ -42,7 +50,7 @@ pub fn read_file_log(paths: Vec<PathBuf>) -> io::Result<()> {
                         for line in reader.lines() {
                             match LogEntry::parse_log_line(line?.to_owned()) {
                                 Some(entry) => {
-                                    send_to_datasource(entry);
+                                    send_to_datasource(entry, cfg.clone());
                                     offset += 1;
                                 }
                                 None => {}
@@ -67,10 +75,11 @@ pub fn read_file_log(paths: Vec<PathBuf>) -> io::Result<()> {
     Ok(())
 }
 
-fn send_to_datasource(entry: LogEntry) {
+fn send_to_datasource(entry: LogEntry, cfg: Cfg) {
     let mut sc: Vec<SourceType> = Vec::new();
-    sc.push(SourceType::Kafka);
-    sc.push(SourceType::Postgresql);
+    for data_source in cfg.data_sources {
+        sc.push(SourceType::from_string(&data_source));
+    }
 
     let json_data = LogEntry::parse_to_json(entry.clone()).expect("error");
 
@@ -78,11 +87,6 @@ fn send_to_datasource(entry: LogEntry) {
     for s in sc.iter() {
         let datasource = DatasourceFactory::create_ds(&s);
         // Datasource notifier
-       datasource.send_data(json_data.clone())
-    }
-
-    // using observer pattern
-    for s in sc.iter() {
-        DatasourceFactory::add_observer(s,json_data.clone());
+        datasource.send_data(json_data.clone())
     }
 }

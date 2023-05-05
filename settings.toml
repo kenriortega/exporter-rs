@@ -1,0 +1,8 @@
+[app]
+app_name = "exporter-rs"
+
+[sink]
+logs_type = "Nginx" # Nginx , ISS , Apache
+
+[sources]
+data_sources = ["Kafka","Postgresql"] # Kafka Postgresql Stdout
