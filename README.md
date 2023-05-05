@@ -43,20 +43,22 @@ Result for our PoC
 watching /var/log/Nginx/
 
 file to read Some("access.metrics.log")
-number line: 0, content_log: ::1 - - [27/Apr/2023:05:51:22 -0700] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58" 0.000
-number line: 1, content_log: ::1 - - [27/Apr/2023:05:53:47 -0700] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58" 0.000
-number line: 2, content_log: ::1 - - [27/Apr/2023:06:01:46 -0700] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58" 0.000
-number line: 3, content_log: ::1 - - [27/Apr/2023:06:03:59 -0700] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58" 0.000
+last offset from txt : 10
+offset > 0 : 10
+kafka: {"remote_addr":"::1","time_local":"05/May/2023:14:24:29 -0700","request":"GET / HTTP/1.1","status":200,"body_bytes_sent":612,"http_referer":"-","http_user_agent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.963","request_time":0.0}
+postgres: {"remote_addr":"::1","time_local":"05/May/2023:14:24:29 -0700","request":"GET / HTTP/1.1","status":200,"body_bytes_sent":612,"http_referer":"-","http_user_agent":"Mozilla/5.0 (Windows NT; Windows NT 10.0; en-US) WindowsPowerShell/5.1.22621.963","request_time":0.0}
+last offset to commit 11
 file to read Some("access.log")
-This log file access.log, don`t have an implemented parser for this moment
+
 ...
 ```
 
 ## ROADMAP todo
 
+- Create configuration file **done**
+- get paths and foreach all logs files and read content **_done_**
 - parse the events related with log. file (should be modifying)? **_in progress_**
-- get paths and foreach all logs files and read content **_in progress_**
 - parse all lines (using patterns or regex) (format apache, Nginx, IIS) also JSON? **_in progress_**
-- Use a database (like sqlite) to store last line check before close file (create struct)
+- Use a database (like sqlite) to store last line check before close file (create struct, offset file) **_in progress_**
 - Send data to different sources (kafka, loki, postgresql, should be elastic)
-- Create configuration file
+- Parse time_local to unix timestamp
