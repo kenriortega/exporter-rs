@@ -8,6 +8,3 @@ impl Datasource for DatasourceKafka {
     }
 }
 
-pub fn send_data(json: String) {
-    println!("kafka: {}", json)
-}

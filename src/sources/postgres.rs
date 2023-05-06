@@ -8,6 +8,3 @@ impl Datasource for DatasourcePostgres {
     }
 }
 
-pub fn send_data(json: String) {
-    println!("postgres: {}", json)
-}
