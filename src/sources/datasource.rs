@@ -1,7 +1,7 @@
+use crate::sources::console::DatasourceConsole;
 use crate::sources::kafka::DatasourceKafka;
 use crate::sources::postgres::DatasourcePostgres;
-use crate::sources::{kafka, postgres};
-use crate::sources::console::DatasourceConsole;
+
 
 pub trait Datasource {
     fn send_data(&self, json: String);
@@ -18,7 +18,7 @@ impl SourceType {
         let value = match source {
             "Kafka" => SourceType::Kafka,
             "Postgresql" => SourceType::Postgresql,
-            _ => SourceType::Stdout
+            _ => SourceType::Stdout,
         };
         value
     }
@@ -31,7 +31,7 @@ impl DatasourceFactory {
         match source_type {
             SourceType::Kafka => Box::new(DatasourceKafka),
             SourceType::Postgresql => Box::new(DatasourcePostgres),
-            _ => Box::new(DatasourceConsole)
+            _ => Box::new(DatasourceConsole),
         }
     }
 }
