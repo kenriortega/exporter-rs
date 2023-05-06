@@ -1,4 +1,3 @@
-// mod notifier;
 mod config;
 mod parsers;
 mod sources;
