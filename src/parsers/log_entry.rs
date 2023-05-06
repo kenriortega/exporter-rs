@@ -1,10 +1,12 @@
+use chrono::DateTime;
+use chrono_tz::Tz;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct LogEntry {
+pub struct LogEntryNginx {
     pub remote_addr: String,
-    pub time_local: String,
+    pub time_local: i64,
     pub request: String,
     pub status: u16,
     pub body_bytes_sent: u64,
@@ -13,16 +15,20 @@ pub struct LogEntry {
     pub request_time: f32,
 }
 
-impl LogTransformer for LogEntry {
-    fn parse_log_line(line: String) -> Option<LogEntry> {
+impl LogTransformer for LogEntryNginx {
+    fn parse_log_line(line: String) -> Option<LogEntryNginx> {
         let re =
             Regex::new(r#"^([\w:.]+) - (\S+) \[(.*?)] "(.*?)" (\d+) (\d+) "(.*?)" "(.*?)" (.*?)$"#)
                 .ok()?;
         let captures = re.captures(line.as_str())?;
+        let format = "%d/%b/%Y:%H:%M:%S %z";
+        let date_hour_dt = DateTime::parse_from_str(&captures[3], format).unwrap();
+        let timezone = Tz::America__Havana;
 
-        Some(LogEntry {
+        let timestamp = date_hour_dt.with_timezone(&timezone).timestamp();
+        Some(LogEntryNginx {
             remote_addr: captures[1].to_owned(),
-            time_local: captures[3].to_owned(),
+            time_local: timestamp,
             request: captures[4].to_owned(),
             status: captures[5].parse().unwrap(),
             body_bytes_sent: captures[6].parse().unwrap(),
@@ -31,12 +37,12 @@ impl LogTransformer for LogEntry {
             request_time: captures[9].parse().unwrap(),
         })
     }
-    fn parse_to_json(entry: LogEntry) -> Option<String> {
+    fn parse_to_json(entry: LogEntryNginx) -> Option<String> {
         serde_json::to_string(&entry).ok()
     }
 }
 
 pub trait LogTransformer {
-    fn parse_log_line(line: String) -> Option<LogEntry>;
-    fn parse_to_json(entry: LogEntry) -> Option<String>;
+    fn parse_log_line(line: String) -> Option<LogEntryNginx>;
+    fn parse_to_json(entry: LogEntryNginx) -> Option<String>;
 }
