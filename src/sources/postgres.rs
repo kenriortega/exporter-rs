@@ -7,4 +7,3 @@ impl Datasource for DatasourcePostgres {
         println!("postgres: {}", json)
     }
 }
-

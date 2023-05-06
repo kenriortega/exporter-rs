@@ -1,5 +1,4 @@
 use chrono::DateTime;
-use chrono_tz::Tz;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -23,9 +22,7 @@ impl LogTransformer for LogEntryNginx {
         let captures = re.captures(line.as_str())?;
         let format = "%d/%b/%Y:%H:%M:%S %z";
         let date_hour_dt = DateTime::parse_from_str(&captures[3], format).unwrap();
-        let timezone = Tz::America__Havana;
-
-        let timestamp = date_hour_dt.with_timezone(&timezone).timestamp();
+        let timestamp = date_hour_dt.timestamp();
         Some(LogEntryNginx {
             remote_addr: captures[1].to_owned(),
             time_local: timestamp,

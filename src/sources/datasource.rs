@@ -2,7 +2,6 @@ use crate::sources::console::DatasourceConsole;
 use crate::sources::kafka::DatasourceKafka;
 use crate::sources::postgres::DatasourcePostgres;
 
-
 pub trait Datasource {
     fn send_data(&self, json: String);
 }

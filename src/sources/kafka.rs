@@ -7,4 +7,3 @@ impl Datasource for DatasourceKafka {
         println!("kafka: {}", json)
     }
 }
-

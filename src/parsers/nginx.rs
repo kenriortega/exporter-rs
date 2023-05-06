@@ -1,5 +1,6 @@
 use crate::config::Cfg;
-use crate::parsers::log_entry::{LogEntry, LogTransformer};
+
+use crate::parsers::log_entry::{LogEntryNginx, LogTransformer};
 use crate::sources::datasource::{DatasourceFactory, SourceType};
 use chrono::prelude::*;
 use std::fs::{File, OpenOptions};
@@ -37,9 +38,9 @@ pub fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
                         println!("offset > 0 : {}", offset);
 
                         for line in reader.lines().skip(offset - 1) {
-                            match LogEntry::parse_log_line(line?.to_owned()) {
+                            match LogEntryNginx::parse_log_line(line?.to_owned()) {
                                 Some(entry) => {
-                                    send_to_datasource(entry,cfg.clone());
+                                    send_to_datasource(entry, cfg.clone());
                                     offset += 1;
                                 }
                                 None => {}
@@ -48,7 +49,7 @@ pub fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
                     } else {
                         println!("offset < 0 : {}", offset);
                         for line in reader.lines() {
-                            match LogEntry::parse_log_line(line?.to_owned()) {
+                            match LogEntryNginx::parse_log_line(line?.to_owned()) {
                                 Some(entry) => {
                                     send_to_datasource(entry, cfg.clone());
                                     offset += 1;
@@ -75,13 +76,13 @@ pub fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
     Ok(())
 }
 
-fn send_to_datasource(entry: LogEntry, cfg: Cfg) {
+fn send_to_datasource(entry: LogEntryNginx, cfg: Cfg) {
     let mut sc: Vec<SourceType> = Vec::new();
     for data_source in cfg.data_sources {
         sc.push(SourceType::from_string(&data_source));
     }
 
-    let json_data = LogEntry::parse_to_json(entry.clone()).expect("error");
+    let json_data = LogEntryNginx::parse_to_json(entry.clone()).expect("error");
 
     // using Factory pattern
     for s in sc.iter() {

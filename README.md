@@ -57,8 +57,8 @@ file to read Some("access.log")
 
 - Create configuration file **done**
 - get paths and foreach all logs files and read content **_done_**
+- Parse time_local to unix timestamp **_done_**
 - parse the events related with log. file (should be modifying)? **_in progress_**
-- parse all lines (using patterns or regex) (format apache, Nginx, IIS) also JSON? **_in progress_**
+- parse all lines (using patterns or regex) (format apache, Nginx, IIS)? **_in progress_**
 - Use a database (like sqlite) to store last line check before close file (create struct, offset file) **_in progress_**
 - Send data to different sources (kafka, loki, postgresql, should be elastic)
-- Parse time_local to unix timestamp
