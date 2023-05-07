@@ -35,9 +35,9 @@ pub enum LogType {
 impl LogType {
     pub fn from_string(sink: &str) -> Self {
         let value = match sink {
-            "Nginx" => LogType::Nginx,
-            "IIS" => LogType::IIS,
-            "Apache" => LogType::Apache,
+            "nginx" => LogType::Nginx,
+            "iis" => LogType::IIS,
+            "apache" => LogType::Apache,
             _ => LogType::UnKnown,
         };
         value
@@ -86,7 +86,7 @@ impl Cfg {
                     println!("Missing field logs_type");
                     "UnKnown".to_owned()
                 });
-                LogType::from_string(&sink)
+                LogType::from_string(&sink.to_lowercase())
             }
             None => LogType::UnKnown,
         };

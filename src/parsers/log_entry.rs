@@ -14,7 +14,33 @@ pub struct LogEntryNginx {
     pub request_time: f32,
 }
 
-impl LogTransformer for LogEntryNginx {
+#[derive(Serialize, Deserialize, Clone)]
+pub struct LogEntryIIS {
+    date: String,
+    time: String,
+    s_sitename: String,
+    s_computername: String,
+    s_ip: String,
+    cs_method: String,
+    cs_uri_stem: String,
+    cs_uri_query: String,
+    s_port: String,
+    cs_username: String,
+    c_ip: String,
+    cs_version: String,
+    cs_user_agent: String,
+    cs_cookie: String,
+    cs_referer: String,
+    cs_host: String,
+    sc_status: String,
+    sc_substatus: String,
+    sc_win32_status: String,
+    sc_bytes: String,
+    cs_bytes: String,
+    time_taken: String,
+}
+
+impl LogTransformer<LogEntryNginx> for LogEntryNginx {
     fn parse_log_line(line: String) -> Option<LogEntryNginx> {
         let re =
             Regex::new(r#"^([\w:.]+) - (\S+) \[(.*?)] "(.*?)" (\d+) (\d+) "(.*?)" "(.*?)" (.*?)$"#)
@@ -39,7 +65,52 @@ impl LogTransformer for LogEntryNginx {
     }
 }
 
-pub trait LogTransformer {
-    fn parse_log_line(line: String) -> Option<LogEntryNginx>;
-    fn parse_to_json(entry: LogEntryNginx) -> Option<String>;
+impl LogTransformer<LogEntryIIS> for LogEntryIIS {
+    fn parse_log_line(line: String) -> Option<LogEntryIIS> {
+        let re =
+            Regex::new(
+                r#"^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+([\S\s]+?)\s+([\S\s]+?)\s+([\S\s]+?)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)$"#
+            ).unwrap();
+        if line.starts_with("#Software")
+            || line.starts_with("#Version")
+            || line.starts_with("#Date")
+            || line.starts_with("#Fields")
+        {
+            None
+        } else {
+            let captures = re.captures(&line).unwrap();
+            Some(LogEntryIIS {
+                date: captures[0].to_string(),
+                time: captures[1].to_string(),
+                s_sitename: captures[2].to_string(),
+                s_computername: captures[3].to_string(),
+                s_ip: captures[4].to_string(),
+                cs_method: captures[5].to_string(),
+                cs_uri_stem: captures[6].to_string(),
+                cs_uri_query: captures[7].to_string(),
+                s_port: captures[8].to_string(),
+                cs_username: captures[9].to_string(),
+                c_ip: captures[10].to_string(),
+                cs_version: captures[11].to_string(),
+                cs_user_agent: captures[12].to_string(),
+                cs_cookie: captures[13].to_string(),
+                cs_referer: captures[14].to_string(),
+                cs_host: captures[15].to_string(),
+                sc_status: captures[16].to_string(),
+                sc_substatus: captures[17].to_string(),
+                sc_win32_status: captures[18].to_string(),
+                sc_bytes: captures[19].to_string(),
+                cs_bytes: captures[20].to_string(),
+                time_taken: captures[21].to_string(),
+            })
+        }
+    }
+    fn parse_to_json(entry: LogEntryIIS) -> Option<String> {
+        serde_json::to_string(&entry).ok()
+    }
+}
+
+pub trait LogTransformer<T> {
+    fn parse_log_line(line: String) -> Option<T>;
+    fn parse_to_json(entry: T) -> Option<String>;
 }
