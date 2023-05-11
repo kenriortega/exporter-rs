@@ -58,7 +58,7 @@ impl LogTransformer<LogEntryApache> for LogEntryApache {
     fn parse_log_line(line: String) -> Option<LogEntryApache> {
         println!("{line}");
         let re =
-            Regex::new(r#"^(\S+) (\S+) (\S+) \[([\w:/]+\s[+\-]\d{4})\] "(\S+) (\S+)\s*(\S*)" (\d{3}) (\S+) "([^"]*)" "([^"]*)"#)
+            Regex::new(r#"^(\S+) (\S+) (\S+) \[([\w:/]+\s[+\-]\d{4})] "(\S+) (\S+)\s*(\S*)" (\d{3}) (\S+) "([^"]*)" "([^"]*)"#)
                 .ok()?;
         let captures = re.captures(line.as_str())?;
         let format = "%d/%b/%Y:%H:%M:%S %z";
