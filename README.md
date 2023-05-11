@@ -53,6 +53,15 @@ file to read Some("access.log")
 ...
 ```
 
+> IIS logs files
+
+
+```shell
+
+
+```
+
+
 ## ROADMAP todo
 
 - Create configuration file **done**
@@ -62,3 +71,4 @@ file to read Some("access.log")
 - parse all lines (using patterns or regex) (format apache, Nginx, IIS)? **_in progress_**
 - Use a database (like sqlite) to store last line check before close file (create struct, offset file) **_in progress_**
 - Send data to different sources (kafka, loki, postgresql, should be elastic)
+- Add GitHub action for release a binary for (windows & linux) y arch (amd64 y arm)

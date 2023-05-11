@@ -14,6 +14,75 @@ pub struct LogEntryNginx {
     pub request_time: f32,
 }
 
+impl LogTransformer<LogEntryNginx> for LogEntryNginx {
+    fn parse_log_line(line: String) -> Option<LogEntryNginx> {
+        let re =
+            Regex::new(r#"^([\w:.]+) - (\S+) \[(.*?)] "(.*?)" (\d+) (\d+) "(.*?)" "(.*?)" (.*?)$"#)
+                .ok()?;
+        let captures = re.captures(line.as_str())?;
+        let format = "%d/%b/%Y:%H:%M:%S %z";
+        let date_hour_dt = DateTime::parse_from_str(&captures[3], format).unwrap();
+        let timestamp = date_hour_dt.timestamp();
+        Some(LogEntryNginx {
+            remote_addr: captures[1].to_owned(),
+            time_local: timestamp,
+            request: captures[4].to_owned(),
+            status: captures[5].parse().unwrap(),
+            body_bytes_sent: captures[6].parse().unwrap(),
+            http_referer: captures[7].to_owned(),
+            http_user_agent: captures[8].to_owned(),
+            request_time: captures[9].parse().unwrap(),
+        })
+    }
+    fn parse_to_json(entry: LogEntryNginx) -> Option<String> {
+        serde_json::to_string(&entry).ok()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct LogEntryApache {
+    ip: String,
+    identity: String,
+    user: String,
+    datetime: i64,
+    method: String,
+    path: String,
+    protocol: String,
+    status: u16,
+    size: Option<u64>,
+    referer: String,
+    user_agent: String,
+}
+
+impl LogTransformer<LogEntryApache> for LogEntryApache {
+    fn parse_log_line(line: String) -> Option<LogEntryApache> {
+        println!("{line}");
+        let re =
+            Regex::new(r#"^(\S+) (\S+) (\S+) \[([\w:/]+\s[+\-]\d{4})\] "(\S+) (\S+)\s*(\S*)" (\d{3}) (\S+) "([^"]*)" "([^"]*)"#)
+                .ok()?;
+        let captures = re.captures(line.as_str())?;
+        let format = "%d/%b/%Y:%H:%M:%S %z";
+        let date_hour_dt = DateTime::parse_from_str(&captures[4], format).unwrap();
+        let timestamp = date_hour_dt.timestamp();
+        Some(LogEntryApache {
+            ip: captures[1].to_string(),
+            identity: captures[2].to_string(),
+            user: captures[3].to_string(),
+            datetime: timestamp,
+            method: captures[5].to_string(),
+            path: captures[6].to_string(),
+            protocol: captures[7].to_string(),
+            status: captures[8].parse().unwrap(),
+            size: if captures[9] == "-".to_owned() { None } else { Some(captures[9].parse().unwrap()) },
+            referer: captures[10].to_string(),
+            user_agent: captures[11].to_string(),
+        })
+    }
+    fn parse_to_json(entry: LogEntryApache) -> Option<String> {
+        serde_json::to_string(&entry).ok()
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct LogEntryIIS {
     date: String,
@@ -38,31 +107,6 @@ pub struct LogEntryIIS {
     sc_bytes: String,
     cs_bytes: String,
     time_taken: String,
-}
-
-impl LogTransformer<LogEntryNginx> for LogEntryNginx {
-    fn parse_log_line(line: String) -> Option<LogEntryNginx> {
-        let re =
-            Regex::new(r#"^([\w:.]+) - (\S+) \[(.*?)] "(.*?)" (\d+) (\d+) "(.*?)" "(.*?)" (.*?)$"#)
-                .ok()?;
-        let captures = re.captures(line.as_str())?;
-        let format = "%d/%b/%Y:%H:%M:%S %z";
-        let date_hour_dt = DateTime::parse_from_str(&captures[3], format).unwrap();
-        let timestamp = date_hour_dt.timestamp();
-        Some(LogEntryNginx {
-            remote_addr: captures[1].to_owned(),
-            time_local: timestamp,
-            request: captures[4].to_owned(),
-            status: captures[5].parse().unwrap(),
-            body_bytes_sent: captures[6].parse().unwrap(),
-            http_referer: captures[7].to_owned(),
-            http_user_agent: captures[8].to_owned(),
-            request_time: captures[9].parse().unwrap(),
-        })
-    }
-    fn parse_to_json(entry: LogEntryNginx) -> Option<String> {
-        serde_json::to_string(&entry).ok()
-    }
 }
 
 impl LogTransformer<LogEntryIIS> for LogEntryIIS {

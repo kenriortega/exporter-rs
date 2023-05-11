@@ -43,7 +43,7 @@ fn watch<P: AsRef<Path>>(path: P, cfg: Cfg) -> notify::Result<()> {
 
 fn event_file_log_to_parse(event: Event, cfg: Cfg) {
     let paths = event.paths;
-    // READ files from paths changed
+
     match cfg.logs_type {
         config::LogType::Nginx => {
             parsers::nginx::read_file_log(paths, cfg).expect("error: read_file_log")
@@ -52,7 +52,7 @@ fn event_file_log_to_parse(event: Event, cfg: Cfg) {
             parsers::iis::read_file_log(paths, cfg).expect("error: read_file_log")
         }
         config::LogType::Apache => {
-            println!("No {:?} parser implemented", config::LogType::Apache);
+            parsers::apache2::read_file_log(paths, cfg).expect("error: read_file_log")
         }
         config::LogType::UnKnown => {
             println!("No {:?} parser implemented", config::LogType::UnKnown);
