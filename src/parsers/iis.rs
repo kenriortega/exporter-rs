@@ -1,6 +1,7 @@
 use crate::config::Cfg;
+use crate::outputs::{Console, Kafka, Output, Postgres};
 use crate::parsers::log_entry::{LogEntryIIS, LogTransformer};
-use crate::sources::datasource::{DatasourceFactory, SourceType};
+use crate::sources::SourceType;
 use chrono::prelude::*;
 use std::fs::{File, OpenOptions};
 use std::io;
@@ -79,8 +80,19 @@ fn send_to_datasource(entry: LogEntryIIS, cfg: Cfg) {
 
     // using Factory pattern
     for s in sc.iter() {
-        let datasource = DatasourceFactory::create_ds(&s);
-        // Datasource notifier
-        datasource.send_data(json_data.clone())
+        match s {
+            SourceType::Kafka => {
+                let out: Output<Kafka> = Output::new(json_data.to_owned());
+                out.send_data()
+            }
+            SourceType::Postgresql => {
+                let out: Output<Postgres> = Output::new(json_data.to_owned());
+                out.send_data()
+            }
+            _ => {
+                let out: Output<Console> = Output::new(json_data.to_owned());
+                out.send_data()
+            }
+        }
     }
 }

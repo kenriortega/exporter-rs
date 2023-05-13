@@ -73,7 +73,11 @@ impl LogTransformer<LogEntryApache> for LogEntryApache {
             path: captures[6].to_string(),
             protocol: captures[7].to_string(),
             status: captures[8].parse().unwrap(),
-            size: if captures[9] == "-".to_owned() { None } else { Some(captures[9].parse().unwrap()) },
+            size: if captures[9] == "-".to_owned() {
+                None
+            } else {
+                Some(captures[9].parse().unwrap())
+            },
             referer: captures[10].to_string(),
             user_agent: captures[11].to_string(),
         })

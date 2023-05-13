@@ -1,7 +1,7 @@
 mod config;
+mod outputs;
 mod parsers;
 mod sources;
-mod outputs;
 
 use crate::config::Cfg;
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};

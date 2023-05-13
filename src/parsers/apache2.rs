@@ -1,12 +1,12 @@
 use crate::config::Cfg;
+use crate::outputs::{Console, Kafka, Output, Postgres};
 use crate::parsers::log_entry::{LogEntryApache, LogTransformer};
-use crate::sources::datasource::{DatasourceFactory, SourceType};
+use crate::sources::SourceType;
 use chrono::prelude::*;
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::{BufRead, BufReader, BufWriter, Seek, SeekFrom, Write};
 use std::path::PathBuf;
-use crate::outputs::{Kafka, Output, Postgres, Console};
 
 pub fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
     for path in paths.iter() {
@@ -80,9 +80,6 @@ fn send_to_datasource(entry: LogEntryApache, cfg: Cfg) {
 
     // using Factory pattern
     for s in sc.iter() {
-        // let datasource = DatasourceFactory::create_ds(&s);
-        // // Datasource notifier
-        // datasource.send_data(json_data.clone())
         match s {
             SourceType::Kafka => {
                 let out: Output<Kafka> = Output::new(json_data.to_owned());
