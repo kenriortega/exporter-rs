@@ -1,5 +1,6 @@
 use crate::config::Cfg;
-use crate::outputs::{Console, Kafka, Output, Postgres};
+use crate::outputs::kfk::Kafka;
+use crate::outputs::{Console, Output, Postgres};
 use crate::parsers::log_entry::{LogEntryIIS, LogTransformer};
 use crate::sources::SourceType;
 use chrono::prelude::*;
@@ -72,7 +73,7 @@ pub fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
 
 fn send_to_datasource(entry: LogEntryIIS, cfg: Cfg) {
     let mut sc: Vec<SourceType> = Vec::new();
-    for data_source in cfg.data_sources {
+    for data_source in &cfg.data_sources {
         sc.push(SourceType::from_string(&data_source));
     }
 
@@ -82,15 +83,15 @@ fn send_to_datasource(entry: LogEntryIIS, cfg: Cfg) {
     for s in sc.iter() {
         match s {
             SourceType::Kafka => {
-                let out: Output<Kafka> = Output::new(json_data.to_owned());
+                let out: Output<Kafka> = Output::new(cfg.clone(), json_data.to_owned());
                 out.send_data()
             }
             SourceType::Postgresql => {
-                let out: Output<Postgres> = Output::new(json_data.to_owned());
+                let out: Output<Postgres> = Output::new(cfg.clone(), json_data.to_owned());
                 out.send_data()
             }
             _ => {
-                let out: Output<Console> = Output::new(json_data.to_owned());
+                let out: Output<Console> = Output::new(cfg.clone(), json_data.to_owned());
                 out.send_data()
             }
         }

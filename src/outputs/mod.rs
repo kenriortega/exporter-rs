@@ -1,16 +1,15 @@
-pub struct Kafka;
+use crate::config::Cfg;
+
+pub mod kfk;
+
 pub struct Postgres;
+
 pub struct Console;
 
 pub struct Output<T> {
     pub data_received: String,
+    pub cfg: Cfg,
     state: std::marker::PhantomData<T>,
-}
-
-impl Output<Kafka> {
-    pub fn send_data(&self) {
-        println!("kafka: {}", self.data_received)
-    }
 }
 
 impl Output<Postgres> {
@@ -26,9 +25,10 @@ impl Output<Console> {
 }
 
 impl<T> Output<T> {
-    pub fn new(data_received: String) -> Self {
+    pub fn new(cfg: Cfg, data_received: String) -> Self {
         Output {
             data_received,
+            cfg,
             state: Default::default(),
         }
     }

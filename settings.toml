@@ -6,3 +6,7 @@ logs_type = "Apache" # Nginx , ISS , Apache
 
 [sources]
 data_sources = ["Kafka","Postgresql"] # Kafka Postgresql Stdout Loki
+
+[kafka]
+brokers = "192.168.1.104:9092" # brokers splited by (,)
+topics = "ais" # topics splited by (,)

@@ -7,6 +7,7 @@ struct CfgToml {
     app: Option<CfgApp>,
     sink: Option<CfgSink>,
     sources: Option<CfgSources>,
+    kafka: Option<CfgKafka>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -22,6 +23,12 @@ struct CfgSink {
 #[derive(Serialize, Deserialize, Debug)]
 struct CfgSources {
     data_sources: Option<Vec<String>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CfgKafka {
+    pub brokers: Option<String>,
+    pub topics: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -49,6 +56,7 @@ pub struct Cfg {
     pub app_name: String,
     pub logs_type: LogType,
     pub data_sources: Vec<String>,
+    pub kafka_opts: CfgKafka,
 }
 
 impl Cfg {
@@ -69,6 +77,7 @@ impl Cfg {
                 app: None,
                 sink: None,
                 sources: None,
+                kafka: None,
             }
         });
 
@@ -99,10 +108,32 @@ impl Cfg {
             None => vec![],
         };
 
+        let kafka_opts = match cfg_toml.kafka {
+            Some(opts) => {
+                let brokers = opts.brokers.unwrap_or_else(|| {
+                    println!("Missing field logs_type");
+                    "UnKnown".to_owned()
+                });
+                let topics = opts.topics.unwrap_or_else(|| {
+                    println!("Missing field logs_type");
+                    "UnKnown".to_owned()
+                });
+                CfgKafka {
+                    brokers: Some(brokers),
+                    topics: Some(topics),
+                }
+            }
+            _ => CfgKafka {
+                brokers: None,
+                topics: None,
+            },
+        };
+
         Cfg {
             app_name,
             logs_type,
             data_sources,
+            kafka_opts,
         }
     }
 }
