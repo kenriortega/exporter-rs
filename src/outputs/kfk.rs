@@ -1,21 +1,36 @@
-use crate::outputs::Output;
+use crate::outputs::{LogType, Output};
 use kafka::client::Compression;
 use std::time::Duration;
 
+use crate::config::Cfg;
 use kafka::error::Error as KafkaError;
 use kafka::producer::{Producer, Record, RequiredAcks};
 
 pub struct Kafka;
 
 impl Output<Kafka> {
-    pub fn send_data(&self) {
-        let topic_biding = self.cfg.kafka_opts.topics.clone().unwrap();
-        let topic = topic_biding.as_str();
-        // TODO: learn about how to split string by , and save this result in a vector
-        let brokers: Vec<String> = vec![self.cfg.kafka_opts.brokers.clone().unwrap()];
-        if let Err(e) = produce_message(self.data_received.as_bytes(), topic, brokers) {
-            println!("Failed producing messages: {}", e);
+    pub async fn send_data(&self) {
+        match &self.data_received {
+            LogType::LogEntryApache(data) => {
+                send_data_to_kafka(self.cfg.clone(), serde_json::to_string(&data).unwrap())
+            }
+            LogType::LogEntryIIS(data) => {
+                send_data_to_kafka(self.cfg.clone(), serde_json::to_string(&data).unwrap())
+            }
+            LogType::LogEntryNginx(data) => {
+                send_data_to_kafka(self.cfg.clone(), serde_json::to_string(&data).unwrap())
+            }
         }
+    }
+}
+
+fn send_data_to_kafka(cfg: Cfg, data: String) {
+    let topic_biding = cfg.kafka_opts.topics.clone().unwrap();
+    let topic = topic_biding.as_str();
+    // TODO: learn about how to split string by , and save this result in a vector
+    let brokers: Vec<String> = vec![cfg.kafka_opts.brokers.clone().unwrap()];
+    if let Err(e) = produce_message(data.as_bytes(), topic, brokers) {
+        println!("Failed producing messages: {}", e);
     }
 }
 
@@ -52,7 +67,7 @@ fn produce_message(data: &[u8], topic: &str, brokers: Vec<String>) -> Result<(),
 
     // ~ we can achieve exactly the same as above in a shorter way with
     // the following call
-    producer.send(&Record::from_value(topic, data))?;
+    // producer.send(&Record::from_value(topic, data))?;
 
     Ok(())
 }

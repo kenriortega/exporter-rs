@@ -7,21 +7,24 @@ use crate::config::Cfg;
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::Path;
 
-fn main() {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     // Read config file
-    let cfg: Cfg = Cfg::new();
+    let cfg = Cfg::new().await;
 
     let path = std::env::args()
         .nth(1)
         .expect("Argument 1 needs to be a path");
     println!("watching {}", path);
 
-    if let Err(e) = watch(path, cfg) {
+    if let Err(e) = watch(path, cfg).await {
         println!("error: {:?}", e)
     }
+
+    Ok(())
 }
 
-fn watch<P: AsRef<Path>>(path: P, cfg: Cfg) -> notify::Result<()> {
+async fn watch<P: AsRef<Path>>(path: P, cfg: Cfg) -> notify::Result<()> {
     let (tx, rx) = std::sync::mpsc::channel();
 
     // Automatically select the best implementation for your platform.
@@ -34,7 +37,7 @@ fn watch<P: AsRef<Path>>(path: P, cfg: Cfg) -> notify::Result<()> {
 
     for res in rx {
         match res {
-            Ok(event_file) => event_file_log_to_parse(event_file, cfg.clone()),
+            Ok(event_file) => event_file_log_to_parse(event_file, cfg.clone()).await,
             Err(e) => println!("watch error: {:?}", e),
         }
     }
@@ -42,18 +45,18 @@ fn watch<P: AsRef<Path>>(path: P, cfg: Cfg) -> notify::Result<()> {
     Ok(())
 }
 
-fn event_file_log_to_parse(event: Event, cfg: Cfg) {
+async fn event_file_log_to_parse(event: Event, cfg: Cfg) {
     let paths = event.paths;
 
     match cfg.logs_type {
         config::LogType::Nginx => {
-            parsers::nginx::read_file_log(paths, cfg).expect("error: read_file_log")
+            parsers::nginx::read_file_log(paths, cfg).await.unwrap();
         }
         config::LogType::IIS => {
-            parsers::iis::read_file_log(paths, cfg).expect("error: read_file_log")
+            parsers::iis::read_file_log(paths, cfg).await.unwrap();
         }
         config::LogType::Apache => {
-            parsers::apache2::read_file_log(paths, cfg).expect("error: read_file_log")
+            parsers::apache2::read_file_log(paths, cfg).await.unwrap();
         }
         config::LogType::UnKnown => {
             println!("No {:?} parser implemented", config::LogType::UnKnown);

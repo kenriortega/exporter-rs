@@ -2,7 +2,12 @@ use chrono::DateTime;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone)]
+pub trait LogTransformer<T> {
+    fn parse_log_line(line: String) -> Option<T>;
+    fn parse_to_json(entry: T) -> Option<String>;
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LogEntryNginx {
     pub remote_addr: String,
     pub time_local: i64,
@@ -39,7 +44,7 @@ impl LogTransformer<LogEntryNginx> for LogEntryNginx {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LogEntryApache {
     ip: String,
     identity: String,
@@ -56,7 +61,6 @@ pub struct LogEntryApache {
 
 impl LogTransformer<LogEntryApache> for LogEntryApache {
     fn parse_log_line(line: String) -> Option<LogEntryApache> {
-        println!("{line}");
         let re =
             Regex::new(r#"^(\S+) (\S+) (\S+) \[([\w:/]+\s[+\-]\d{4})] "(\S+) (\S+)\s*(\S*)" (\d{3}) (\S+) "([^"]*)" "([^"]*)"#)
                 .ok()?;
@@ -87,7 +91,7 @@ impl LogTransformer<LogEntryApache> for LogEntryApache {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct LogEntryIIS {
     date: String,
     time: String,
@@ -156,9 +160,4 @@ impl LogTransformer<LogEntryIIS> for LogEntryIIS {
     fn parse_to_json(entry: LogEntryIIS) -> Option<String> {
         serde_json::to_string(&entry).ok()
     }
-}
-
-pub trait LogTransformer<T> {
-    fn parse_log_line(line: String) -> Option<T>;
-    fn parse_to_json(entry: T) -> Option<String>;
 }

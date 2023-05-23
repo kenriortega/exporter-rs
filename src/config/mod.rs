@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
+use sqlx::{Pool, Postgres};
 use std::fs;
 use std::io::Error as IoError;
+
+use sqlx::postgres::PgPoolOptions;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct CfgToml {
@@ -8,6 +11,7 @@ struct CfgToml {
     sink: Option<CfgSink>,
     sources: Option<CfgSources>,
     kafka: Option<CfgKafka>,
+    postgres: Option<CfgPostgres>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -31,6 +35,11 @@ pub struct CfgKafka {
     pub topics: Option<String>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CfgPostgres {
+    pub dsn: Option<String>,
+}
+
 #[derive(Debug, Clone)]
 pub enum LogType {
     Nginx,
@@ -52,15 +61,21 @@ impl LogType {
 }
 
 #[derive(Debug, Clone)]
+pub struct PostgresOpts {
+    pub pool: Pool<Postgres>,
+}
+
+#[derive(Debug, Clone)]
 pub struct Cfg {
     pub app_name: String,
     pub logs_type: LogType,
     pub data_sources: Vec<String>,
     pub kafka_opts: CfgKafka,
+    pub pgx_opts: PostgresOpts,
 }
 
 impl Cfg {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         let config_filepaths: [&str; 2] = ["./settings.toml", "~/exporter-rs/settings.toml"];
 
         let mut content: String = "".to_owned();
@@ -78,6 +93,7 @@ impl Cfg {
                 sink: None,
                 sources: None,
                 kafka: None,
+                postgres: None,
             }
         });
 
@@ -129,11 +145,32 @@ impl Cfg {
             },
         };
 
+        let pgx_opts = match cfg_toml.postgres {
+            Some(opts) => {
+                let dsn = opts.dsn.unwrap_or_else(|| {
+                    println!("Missing field logs_type");
+                    "UnKnown".to_owned()
+                });
+                let pool = PgPoolOptions::new()
+                    .max_connections(5)
+                    .connect(&dsn)
+                    .await
+                    .unwrap();
+                PostgresOpts { pool }
+            }
+
+            _ => {
+                let pool = PgPoolOptions::default().connect("").await.unwrap();
+                PostgresOpts { pool }
+            }
+        };
+
         Cfg {
             app_name,
             logs_type,
             data_sources,
             kafka_opts,
+            pgx_opts,
         }
     }
 }

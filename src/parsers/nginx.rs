@@ -1,7 +1,8 @@
 use crate::config::Cfg;
 
 use crate::outputs::kfk::Kafka;
-use crate::outputs::{Console, Output, Postgres};
+use crate::outputs::pgx::Postgres;
+use crate::outputs::{Console, LogType, Output};
 use crate::parsers::log_entry::{LogEntryNginx, LogTransformer};
 use crate::sources::SourceType;
 use chrono::prelude::*;
@@ -10,7 +11,7 @@ use std::io;
 use std::io::{BufRead, BufReader, BufWriter, Seek, SeekFrom, Write};
 use std::path::PathBuf;
 
-pub fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
+pub async fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
     for path in paths.iter() {
         println!("file to read {:?}", path.file_name());
         match path.file_name() {
@@ -42,7 +43,7 @@ pub fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
                         for line in reader.lines().skip(offset - 1) {
                             match LogEntryNginx::parse_log_line(line?.to_owned()) {
                                 Some(entry) => {
-                                    send_to_datasource(entry, cfg.clone());
+                                    send_to_datasource(entry, cfg.clone()).await;
                                     offset += 1;
                                 }
                                 None => {}
@@ -53,7 +54,7 @@ pub fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
                         for line in reader.lines() {
                             match LogEntryNginx::parse_log_line(line?.to_owned()) {
                                 Some(entry) => {
-                                    send_to_datasource(entry, cfg.clone());
+                                    send_to_datasource(entry, cfg.clone()).await;
                                     offset += 1;
                                 }
                                 None => {}
@@ -78,28 +79,29 @@ pub fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
     Ok(())
 }
 
-fn send_to_datasource(entry: LogEntryNginx, cfg: Cfg) {
+async fn send_to_datasource(entry: LogEntryNginx, cfg: Cfg) {
     let mut sc: Vec<SourceType> = Vec::new();
     for data_source in &cfg.data_sources {
         sc.push(SourceType::from_string(&data_source));
     }
 
-    let json_data = LogEntryNginx::parse_to_json(entry.clone()).expect("error");
-
     // using Factory pattern
     for s in sc.iter() {
         match s {
             SourceType::Kafka => {
-                let out: Output<Kafka> = Output::new(cfg.clone(), json_data.to_owned());
-                out.send_data()
+                let out: Output<Kafka> =
+                    Output::new(cfg.clone(), LogType::LogEntryNginx(entry.clone())).await;
+                out.send_data().await;
             }
             SourceType::Postgresql => {
-                let out: Output<Postgres> = Output::new(cfg.clone(), json_data.to_owned());
-                out.send_data()
+                let out: Output<Postgres> =
+                    Output::new(cfg.clone(), LogType::LogEntryNginx(entry.clone())).await;
+                out.send_data().await;
             }
             _ => {
-                let out: Output<Console> = Output::new(cfg.clone(), json_data.to_owned());
-                out.send_data()
+                let out: Output<Console> =
+                    Output::new(cfg.clone(), LogType::LogEntryNginx(entry.clone())).await;
+                out.send_data().await;
             }
         }
     }
