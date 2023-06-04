@@ -1,14 +1,16 @@
+use crate::config::sources::SourceType;
 use crate::config::Cfg;
+use crate::outputs::console::Console;
 use crate::outputs::kfk::Kafka;
 use crate::outputs::pgx::Postgres;
-use crate::outputs::{Console, LogType, Output};
-use crate::parsers::log_entry::{LogEntryApache, LogEntryIIS, LogTransformer};
-use crate::sources::SourceType;
+use crate::outputs::{LogType, Output};
+use crate::parsers::log_entry::{LogEntryIIS, LogTransformer};
 use chrono::prelude::*;
 use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::{BufRead, BufReader, BufWriter, Seek, SeekFrom, Write};
 use std::path::PathBuf;
+use crate::outputs::loki::Loki;
 
 pub async fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
     for path in paths.iter() {
@@ -78,8 +80,6 @@ async fn send_to_datasource(entry: LogEntryIIS, cfg: Cfg) {
         sc.push(SourceType::from_string(&data_source));
     }
 
-    let json_data = LogEntryIIS::parse_to_json(entry.clone()).expect("error");
-
     // using Factory pattern
     for s in sc.iter() {
         match s {
@@ -90,6 +90,11 @@ async fn send_to_datasource(entry: LogEntryIIS, cfg: Cfg) {
             }
             SourceType::Postgresql => {
                 let out: Output<Postgres> =
+                    Output::new(cfg.clone(), LogType::LogEntryIIS(entry.clone())).await;
+                out.send_data().await;
+            }
+            SourceType::Loki => {
+                let out: Output<Loki> =
                     Output::new(cfg.clone(), LogType::LogEntryIIS(entry.clone())).await;
                 out.send_data().await;
             }

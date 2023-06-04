@@ -1,12 +1,10 @@
 use crate::config::Cfg;
 use crate::parsers::log_entry::{LogEntryApache, LogEntryIIS, LogEntryNginx};
 
+pub mod console;
 pub mod kfk;
 pub mod pgx;
-
-pub struct Postgres;
-
-pub struct Console;
+pub mod loki;
 
 pub enum LogType {
     LogEntryApache(LogEntryApache),
@@ -18,22 +16,6 @@ pub struct Output<T> {
     pub data_received: LogType,
     pub cfg: Cfg,
     state: std::marker::PhantomData<T>,
-}
-
-impl Output<Console> {
-    pub async fn send_data(&self) {
-        match &self.data_received {
-            LogType::LogEntryApache(data) => {
-                println!("stdout: {:?}", data)
-            }
-            LogType::LogEntryIIS(data) => {
-                println!("stdout: {:?}", data)
-            }
-            LogType::LogEntryNginx(data) => {
-                println!("stdout: {:?}", data)
-            }
-        }
-    }
 }
 
 impl<T> Output<T> {

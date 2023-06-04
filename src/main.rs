@@ -1,11 +1,9 @@
-mod config;
-mod outputs;
-mod parsers;
-mod sources;
 
-use crate::config::Cfg;
+use exporter_core::config::sources::LogType;
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::Path;
+use exporter_core::config::Cfg;
+use exporter_core::parsers;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -49,17 +47,17 @@ async fn event_file_log_to_parse(event: Event, cfg: Cfg) {
     let paths = event.paths;
 
     match cfg.logs_type {
-        config::LogType::Nginx => {
+        LogType::Nginx => {
             parsers::nginx::read_file_log(paths, cfg).await.unwrap();
         }
-        config::LogType::IIS => {
+        LogType::IIS => {
             parsers::iis::read_file_log(paths, cfg).await.unwrap();
         }
-        config::LogType::Apache => {
+        LogType::Apache => {
             parsers::apache2::read_file_log(paths, cfg).await.unwrap();
         }
-        config::LogType::UnKnown => {
-            println!("No {:?} parser implemented", config::LogType::UnKnown);
+        LogType::UnKnown => {
+            println!("No {:?} parser implemented", LogType::UnKnown);
         }
     }
 }

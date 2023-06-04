@@ -1,8 +1,12 @@
+pub mod sources;
+
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
+use std::collections::HashMap;
 use std::fs;
 use std::io::Error as IoError;
 
+use crate::config::sources::LogType;
 use sqlx::postgres::PgPoolOptions;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -38,26 +42,6 @@ pub struct CfgKafka {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CfgPostgres {
     pub dsn: Option<String>,
-}
-
-#[derive(Debug, Clone)]
-pub enum LogType {
-    Nginx,
-    IIS,
-    Apache,
-    UnKnown,
-}
-
-impl LogType {
-    pub fn from_string(sink: &str) -> Self {
-        let value = match sink {
-            "nginx" => LogType::Nginx,
-            "iis" => LogType::IIS,
-            "apache" => LogType::Apache,
-            _ => LogType::UnKnown,
-        };
-        value
-    }
 }
 
 #[derive(Debug, Clone)]
