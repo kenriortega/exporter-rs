@@ -1,9 +1,8 @@
-
 use exporter_core::config::sources::LogType;
-use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
-use std::path::Path;
 use exporter_core::config::Cfg;
 use exporter_core::parsers;
+use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
+use std::path::Path;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

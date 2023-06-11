@@ -10,7 +10,7 @@ impl SourceType {
         let value = match source {
             "Kafka" => SourceType::Kafka,
             "Postgresql" => SourceType::Postgresql,
-            "Loki" => SourceType::Postgresql,
+            "Loki" => SourceType::Loki,
             _ => SourceType::Stdout,
         };
         value

@@ -2,6 +2,7 @@ use crate::config::sources::SourceType;
 use crate::config::Cfg;
 use crate::outputs::console::Console;
 use crate::outputs::kfk::Kafka;
+use crate::outputs::loki::Loki;
 use crate::outputs::pgx::Postgres;
 use crate::outputs::{LogType, Output};
 use crate::parsers::log_entry::{LogEntryApache, LogTransformer};
@@ -10,7 +11,6 @@ use std::fs::{File, OpenOptions};
 use std::io;
 use std::io::{BufRead, BufReader, BufWriter, Seek, SeekFrom, Write};
 use std::path::PathBuf;
-use crate::outputs::loki::Loki;
 
 pub async fn read_file_log(paths: Vec<PathBuf>, cfg: Cfg) -> io::Result<()> {
     for path in paths.iter() {

@@ -3,8 +3,8 @@ use crate::parsers::log_entry::{LogEntryApache, LogEntryIIS, LogEntryNginx};
 
 pub mod console;
 pub mod kfk;
-pub mod pgx;
 pub mod loki;
+pub mod pgx;
 
 pub enum LogType {
     LogEntryApache(LogEntryApache),

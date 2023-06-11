@@ -2,7 +2,7 @@ pub mod sources;
 
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
-use std::collections::HashMap;
+
 use std::fs;
 use std::io::Error as IoError;
 
@@ -16,6 +16,7 @@ struct CfgToml {
     sources: Option<CfgSources>,
     kafka: Option<CfgKafka>,
     postgres: Option<CfgPostgres>,
+    loki: Option<CfgLoki>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -49,6 +50,11 @@ pub struct PostgresOpts {
     pub pool: Pool<Postgres>,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CfgLoki {
+    pub url: Option<String>,
+}
+
 #[derive(Debug, Clone)]
 pub struct Cfg {
     pub app_name: String,
@@ -56,6 +62,7 @@ pub struct Cfg {
     pub data_sources: Vec<String>,
     pub kafka_opts: CfgKafka,
     pub pgx_opts: PostgresOpts,
+    pub loki_opts: CfgLoki,
 }
 
 impl Cfg {
@@ -78,6 +85,7 @@ impl Cfg {
                 sources: None,
                 kafka: None,
                 postgres: None,
+                loki: None,
             }
         });
 
@@ -149,12 +157,24 @@ impl Cfg {
             }
         };
 
+        let loki_opts = match cfg_toml.loki {
+            Some(opts) => {
+                let url = opts.url.unwrap_or_else(|| {
+                    println!("Missing field logs_type");
+                    "UnKnown".to_owned()
+                });
+                CfgLoki { url: Some(url) }
+            }
+            _ => CfgLoki { url: None },
+        };
+
         Cfg {
             app_name,
             logs_type,
             data_sources,
             kafka_opts,
             pgx_opts,
+            loki_opts,
         }
     }
 }

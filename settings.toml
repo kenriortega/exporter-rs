@@ -5,7 +5,7 @@ app_name = "exporter-rs"
 logs_type = "Apache" # Nginx , ISS , Apache
 
 [sources]
-data_sources = ["Postgresql"] # Kafka Postgresql Stdout Loki
+data_sources = ["Loki"] # Kafka Postgresql Stdout Loki
 
 [kafka]
 brokers = "192.168.1.104:9092" # brokers splited by (,)
@@ -13,3 +13,6 @@ topics = "ais" # topics splited by (,)
 
 [postgres]
 dsn = "postgres://postgres:postgres@192.168.1.104:5432/postgres"
+
+[loki]
+url = "http://localhost:30082/loki/api/v1/push"
