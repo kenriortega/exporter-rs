@@ -27,7 +27,7 @@ impl Output<Kafka> {
 fn send_data_to_kafka(cfg: Cfg, data: String) {
     let topic_biding = cfg.kafka_opts.topics.clone().unwrap();
     let topic = topic_biding.as_str();
-    // TODO: learn about how to split string by , and save this result in a vector
+
     let brokers: Vec<String> = vec![cfg.kafka_opts.brokers.clone().unwrap()];
     if let Err(e) = produce_message(data.as_bytes(), topic, brokers) {
         println!("Failed producing messages: {}", e);
