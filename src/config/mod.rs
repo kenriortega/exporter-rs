@@ -37,7 +37,7 @@ struct CfgSources {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CfgKafka {
     pub brokers: Option<String>,
-    pub topics: Option<String>,
+    pub topics_prefix: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -122,18 +122,18 @@ impl Cfg {
                     println!("Missing field logs_type");
                     "UnKnown".to_owned()
                 });
-                let topics = opts.topics.unwrap_or_else(|| {
+                let topics = opts.topics_prefix.unwrap_or_else(|| {
                     println!("Missing field logs_type");
                     "UnKnown".to_owned()
                 });
                 CfgKafka {
                     brokers: Some(brokers),
-                    topics: Some(topics),
+                    topics_prefix: Some(topics),
                 }
             }
             _ => CfgKafka {
                 brokers: None,
-                topics: None,
+                topics_prefix: None,
             },
         };
 

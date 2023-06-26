@@ -11,25 +11,32 @@ pub struct Kafka;
 impl Output<Kafka> {
     pub async fn send_data(&self) {
         match &self.data_received {
-            LogType::LogEntryApache(data) => {
-                send_data_to_kafka(self.cfg.clone(), serde_json::to_string(&data).unwrap())
-            }
-            LogType::LogEntryIIS(data) => {
-                send_data_to_kafka(self.cfg.clone(), serde_json::to_string(&data).unwrap())
-            }
-            LogType::LogEntryNginx(data) => {
-                send_data_to_kafka(self.cfg.clone(), serde_json::to_string(&data).unwrap())
-            }
+            LogType::LogEntryApache(data) => send_data_to_kafka(
+                self.cfg.clone(),
+                "apache",
+                serde_json::to_string(&data).unwrap(),
+            ),
+            LogType::LogEntryIIS(data) => send_data_to_kafka(
+                self.cfg.clone(),
+                "iis",
+                serde_json::to_string(&data).unwrap(),
+            ),
+            LogType::LogEntryNginx(data) => send_data_to_kafka(
+                self.cfg.clone(),
+                "nginx",
+                serde_json::to_string(&data).unwrap(),
+            ),
         }
     }
 }
 
-fn send_data_to_kafka(cfg: Cfg, data: String) {
-    let topic_biding = cfg.kafka_opts.topics.clone().unwrap();
-    let topic = topic_biding.as_str();
+fn send_data_to_kafka(cfg: Cfg, log_type: &str, data: String) {
+    let topic_biding = cfg.kafka_opts.topics_prefix.clone().unwrap();
+    let topic_prefix = topic_biding.as_str();
+    let topic = topic_prefix.to_owned()+"."+log_type;
 
     let brokers: Vec<String> = vec![cfg.kafka_opts.brokers.clone().unwrap()];
-    if let Err(e) = produce_message(data.as_bytes(), topic, brokers) {
+    if let Err(e) = produce_message(data.as_bytes(), topic.as_str(), brokers) {
         println!("Failed producing messages: {}", e);
     }
 }

@@ -1,0 +1,18 @@
+[app]
+app_name = "exporter-rs"
+
+[sink]
+logs_type = "Apache" # Nginx , ISS , Apache
+
+[sources]
+data_sources = ["Loki"] # Kafka Postgresql Stdout Loki
+
+[kafka]
+brokers = "localhost:31622" # brokers splited by (,)
+topics_prefix = "exporter.logs"
+
+[postgres]
+dsn = "postgres://postgres:password@localhost:31455/postgres"
+
+[loki]
+url = "http://localhost:30309/loki/api/v1/push"
